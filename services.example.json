@@ -1,0 +1,180 @@
+{
+  "panel": {
+    "title": "服务中心",
+    "subtitle": "后台服务 · 端口映射 · 域名解析",
+    "bind": "127.0.0.1",
+    "port": 8899,
+    "refresh_sec": 5
+  },
+  "services": [
+    {
+      "id": "panel-self",
+      "name": "本面板",
+      "group": "本地服务",
+      "desc": "当前正在运行的服务面板自身",
+      "kind": "external",
+      "port": 8899,
+      "probe": {
+        "type": "http",
+        "url": "http://127.0.0.1:8899/api/ping",
+        "timeout": 3
+      }
+    },
+    {
+      "id": "my-task-app",
+      "name": "示例：计划任务托管的应用",
+      "group": "本地服务",
+      "desc": "由 Windows 计划任务拉起，面板能启停它、看它的日志",
+      "kind": "task",
+      "task": "MyAppTask",
+      "match": [
+        "my_app.py"
+      ],
+      "port": 8000,
+      "probe": {
+        "type": "http",
+        "url": "http://127.0.0.1:8000/health",
+        "timeout": 5,
+        "expect": [
+          200
+        ],
+        "degraded_on": [
+          503
+        ],
+        "degraded_hint": "启动中"
+      },
+      "logs": [
+        "C:\\services\\my-app\\app.log"
+      ],
+      "actions": [
+        "start",
+        "stop",
+        "restart"
+      ],
+      "slow_start_sec": 120
+    },
+    {
+      "id": "my-process-app",
+      "name": "示例：裸进程",
+      "group": "本地服务",
+      "desc": "没有计划任务，用启动命令拉起，靠命令行关键字找 PID",
+      "kind": "process",
+      "match": [
+        "my_worker.py"
+      ],
+      "cwd": "C:\\services\\my-worker",
+      "cmd": "python -X utf8 C:\\services\\my-worker\\my_worker.py",
+      "port": 9000,
+      "probe": {
+        "type": "tcp",
+        "host": "127.0.0.1",
+        "port": 9000,
+        "timeout": 3
+      },
+      "logs": [
+        "C:\\services\\my-worker\\worker.log"
+      ],
+      "actions": [
+        "start",
+        "stop",
+        "restart"
+      ]
+    },
+    {
+      "id": "my-nas",
+      "name": "示例：外部设备",
+      "group": "外部设备",
+      "desc": "另一台机器，只能看不能控",
+      "kind": "external",
+      "probe": {
+        "type": "tcp",
+        "host": "192.168.1.10",
+        "port": 5000,
+        "timeout": 3
+      }
+    }
+  ],
+  "mappings": [
+    {
+      "id": "my-public-entry",
+      "name": "示例：公网入口",
+      "group": "映射链路",
+      "desc": "把一条对外链路拆成几段，分别探活，一眼看出断在哪",
+      "segments": [
+        {
+          "label": "本机端口",
+          "hint": "127.0.0.1:8000",
+          "probe": {
+            "type": "tcp",
+            "host": "127.0.0.1",
+            "port": 8000,
+            "timeout": 3
+          }
+        },
+        {
+          "label": "局域网",
+          "hint": "本机 IP:8000",
+          "probe": {
+            "type": "http",
+            "url": "http://@self:8000/health",
+            "timeout": 5,
+            "expect": [
+              200
+            ]
+          }
+        },
+        {
+          "label": "反向代理",
+          "hint": "代理机 IPv6 :8443",
+          "probe": {
+            "type": "tcp",
+            "resolve": "app.example.com",
+            "port": 8443,
+            "timeout": 4
+          }
+        },
+        {
+          "label": "公网域名",
+          "hint": "app.example.com:8443",
+          "probe": {
+            "type": "http",
+            "url": "https://app.example.com:8443/health",
+            "timeout": 10,
+            "expect": [
+              200
+            ]
+          }
+        }
+      ],
+      "ddns": {
+        "record": "app.example.com",
+        "type": "AAAA",
+        "owner": "示例主机"
+      },
+      "access": "https://app.example.com:8443/"
+    }
+  ],
+  "deploy": {
+    "base_dir": "C:\\services\\breeze-tts",
+    "project_dir": "C:\\services\\breeze-tts\\breeze-tts-main",
+    "venv_dir": "C:\\services\\breeze-tts\\venv",
+    "model_dir": "C:\\services\\breeze-tts\\model",
+    "wheel_dir": "C:\\services\\breeze-tts\\wheels",
+    "gateway_port": 7861,
+    "task_name": "BreezeTTSGateway",
+    "base_python": "python",
+    "torch_version": "2.9.1",
+    "pip_index": "https://pypi.org/simple",
+    "torch_index": "https://download.pytorch.org/whl/cu128",
+    "requirements": {
+      "vram_min_gb": 8.0,
+      "vram_rec_gb": 12.0,
+      "vram_fast_gb": 24.0,
+      "cc_min": "7.5",
+      "driver_min": "525.60",
+      "ram_min_gb": 14.0,
+      "ram_rec_gb": 32.0,
+      "disk_min_gb": 25.0
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# 服务面板本体只依赖这三个（其余都是标准库）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+psutil>=5.9

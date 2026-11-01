@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>服务中心</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232b6cff'/%3E%3Crect x='7' y='7' width='7' height='7' rx='2' fill='white'/%3E%3Crect x='18' y='7' width='7' height='7' rx='2' fill='white'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='white'/%3E%3Cpath d='M18 21.5h7M21.5 18v7' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0a0d12; --bg2:#0e1218;
+    --panel:#131924; --panel-hi:#18202d; --line:#222c3c; --line-hi:#2e3a4d;
+    --tx:#e8eef8; --tx2:#9aa8bd; --tx3:#63708a;
+    --ok:#31c46b; --warn:#f0a92b; --bad:#f0563f; --idle:#5b6880;
+    --accent:#4f93ff;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1100px 600px at 12% -8%, #16233a 0%, transparent 60%),
+      radial-gradient(900px 500px at 92% 0%, #1a2030 0%, transparent 55%),
+      var(--bg);
+    color:var(--tx);
+    font:14px/1.55 -apple-system,"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 48px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:26px 0 20px;border-bottom:1px solid var(--line);margin-bottom:26px;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{
+    width:42px;height:42px;border-radius:12px;flex:none;
+    background:linear-gradient(145deg,#2b6cff,#1b3ea8);
+    display:grid;place-items:center;
+    box-shadow:0 6px 20px -6px rgba(43,108,255,.75), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+  .logo svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .brand h1{font-size:18px;font-weight:650;letter-spacing:.2px}
+  .brand p{font-size:12px;color:var(--tx3);margin-top:2px}
+  .hdr-right{display:flex;align-items:center;gap:10px}
+  .clock{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums;margin-right:4px}
+  .clock.live{color:var(--tx2)}
+  .clock .pulse{
+    display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);
+    margin-right:6px;vertical-align:1px;animation:beat 2s infinite;
+  }
+  .clock.isbad .pulse{background:var(--bad);animation:none}
+  @keyframes beat{0%,100%{opacity:1}50%{opacity:.25}}
+
+  button{
+    font:inherit;font-size:13px;color:var(--tx);cursor:pointer;
+    background:var(--panel-hi);border:1px solid var(--line-hi);border-radius:9px;
+    padding:7px 13px;transition:.15s;display:inline-flex;align-items:center;gap:6px;
+    white-space:nowrap;
+  }
+  button:hover{background:#1f2938;border-color:#3b4a61}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  button.primary{background:linear-gradient(180deg,#2f6fe0,#2456b8);border-color:#3c7cf0}
+  button.primary:hover{background:linear-gradient(180deg,#3a7bf0,#2a5fc8)}
+  button.mini{padding:5px 10px;font-size:12px;border-radius:8px}
+  button.danger:hover{border-color:#7a3128;background:#2a1a18;color:#ff9a86}
+  button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .stat{
+    background:linear-gradient(180deg,var(--panel),var(--bg2));
+    border:1px solid var(--line);border-radius:var(--r);padding:15px 17px;
+    position:relative;overflow:hidden;
+  }
+  .stat::after{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--idle));
+  }
+  .stat .k{font-size:11.5px;color:var(--tx3);letter-spacing:.4px;text-transform:uppercase}
+  .stat .v{font-size:26px;font-weight:660;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .stat .s{font-size:11.5px;color:var(--tx3);margin-top:2px}
+
+  /* ---------- section ---------- */
+  .sec{margin-bottom:30px}
+  .sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:13px}
+  .sec-h h2{font-size:13px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--tx2)}
+  .sec-h .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  .sec-h .cnt{font-size:11.5px;color:var(--tx3)}
+
+  /* ---------- service cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+  .card{
+    background:linear-gradient(180deg,var(--panel),#111722);
+    border:1px solid var(--line);border-radius:var(--r);padding:16px 17px 14px;
+    display:flex;flex-direction:column;gap:11px;position:relative;
+    transition:.18s;
+  }
+  .card:hover{border-color:var(--line-hi);transform:translateY(-1px)}
+  .card[data-s="offline"]{border-color:#3a2320;background:linear-gradient(180deg,#1a1417,#120f13)}
+  .card[data-s="degraded"]{border-color:#3a3020}
+  .c-top{display:flex;align-items:center;gap:9px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none;position:relative}
+  .dot::after{
+    content:"";position:absolute;inset:-4px;border-radius:50%;
+    background:currentColor;opacity:.16;
+  }
+  .dot.on{background:var(--ok);color:var(--ok);box-shadow:0 0 10px -1px var(--ok)}
+  .dot.de{background:var(--warn);color:var(--warn);box-shadow:0 0 10px -1px var(--warn);animation:beat 1.4s infinite}
+  .dot.off{background:var(--bad);color:var(--bad);box-shadow:0 0 10px -1px var(--bad)}
+  .dot.un{background:var(--idle);color:var(--idle)}
+  .c-name{font-size:15px;font-weight:600;letter-spacing:.1px}
+  .c-tag{
+    margin-left:auto;font-size:11px;padding:2.5px 8px;border-radius:20px;
+    border:1px solid transparent;letter-spacing:.3px;
+  }
+  .c-tag.on{color:#63e08f;background:#12301f;border-color:#1d4a30}
+  .c-tag.de{color:#ffc266;background:#2e2410;border-color:#4a3a16}
+  .c-tag.off{color:#ff8f7c;background:#2e1714;border-color:#4a241e}
+  .c-tag.un{color:var(--tx3);background:#1a2130;border-color:#28313f}
+  .c-desc{font-size:12.5px;color:var(--tx2);min-height:19px}
+  .c-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--tx3);
+    font-variant-numeric:tabular-nums}
+  .c-meta b{color:var(--tx2);font-weight:500}
+  .c-meta .ok2{color:#52c98a}
+  .c-meta .bad2{color:#ff8f7c}
+  .c-acts{display:flex;gap:7px;margin-top:auto;padding-top:3px;flex-wrap:wrap}
+  .c-detail{
+    font-size:11.5px;color:var(--tx3);border-top:1px dashed var(--line);
+    padding-top:9px;line-height:1.5;word-break:break-all;
+  }
+
+  /* ---------- mapping chains ---------- */
+  .map{
+    background:linear-gradient(180deg,var(--panel),#10161f);
+    border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;
+    margin-bottom:13px;
+  }
+  .map[data-s="offline"]{border-color:#3a2320}
+  .m-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .m-name{font-size:15px;font-weight:600}
+  .m-desc{font-size:12px;color:var(--tx3);margin-bottom:15px}
+  .chain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .seg{
+    flex:1 1 150px;min-width:132px;
+    background:#0d1219;border:1px solid var(--line);border-radius:11px;
+    padding:11px 13px;position:relative;
+  }
+  .seg .lb{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--tx2)}
+  .seg .lb i{width:6px;height:6px;border-radius:50%;background:var(--idle);display:block;flex:none}
+  .seg.on .lb i{background:var(--ok);box-shadow:0 0 8px -1px var(--ok)}
+  .seg.de .lb i{background:var(--warn)}
+  .seg.off .lb i{background:var(--bad);box-shadow:0 0 8px -1px var(--bad)}
+  .seg .ht{font-size:11px;color:var(--tx3);margin-top:4px;word-break:break-all;font-variant-numeric:tabular-nums}
+  .seg .dt{font-size:11px;color:var(--tx3);margin-top:5px}
+  .seg.off .dt{color:#c9755f}
+  .seg.on .dt{color:#4e9e74}
+  .arrow{
+    flex:0 0 30px;display:grid;place-items:center;color:#2b3648;font-size:15px;
+    position:relative;
+  }
+  .arrow.ok{color:#2f6b4a}
+  .arrow.bad{color:#6b3229}
+
+  .ddns{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;
+    padding-top:13px;border-top:1px dashed var(--line);font-size:12px;
+  }
+  .ddns .lab{color:var(--tx3);letter-spacing:.3px}
+  .mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:11.5px;color:var(--tx2);
+    word-break:break-all}
+  .pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line-hi);color:var(--tx2)}
+  .pill.g{color:#63e08f;border-color:#1d4a30;background:#12301f}
+  .pill.y{color:#ffc266;border-color:#4a3a16;background:#2e2410}
+  .pill.r{color:#ff8f7c;border-color:#4a241e;background:#2e1714}
+
+  /* ---------- drawer ---------- */
+  .mask{
+    position:fixed;inset:0;background:rgba(4,7,11,.66);backdrop-filter:blur(3px);
+    opacity:0;pointer-events:none;transition:.22s;z-index:40;
+  }
+  .mask.on{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:min(760px,94vw);
+    background:#0c1118;border-left:1px solid var(--line-hi);
+    transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+    z-index:50;display:flex;flex-direction:column;
+  }
+  .drawer.on{transform:none}
+  .d-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .d-h h3{font-size:14px;font-weight:600}
+  .d-h .sub{font-size:11.5px;color:var(--tx3);margin-top:1px}
+  .d-h .sp{flex:1}
+  .d-body{flex:1;overflow:auto;padding:0}
+  pre.log{
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:11.5px;line-height:1.65;
+    padding:14px 18px;color:#b9c6d8;white-space:pre-wrap;word-break:break-all;
+  }
+  pre.log::-webkit-scrollbar,.d-body::-webkit-scrollbar{width:9px}
+  pre.log::-webkit-scrollbar-thumb,.d-body::-webkit-scrollbar-thumb{background:#25303f;border-radius:9px}
+  .d-foot{padding:11px 20px;border-top:1px solid var(--line);display:flex;gap:9px;align-items:center}
+
+  textarea{
+    width:100%;height:100%;background:#0a0e14;color:#c8d4e4;border:0;outline:0;resize:none;
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12.5px;line-height:1.6;
+    padding:16px 18px;tab-size:2;
+  }
+  .err{color:#ff8f7c;font-size:12px;padding:9px 20px;background:#22120f;border-top:1px solid #3a2320;display:none}
+  .err.on{display:block}
+
+  /* ---------- settings ---------- */
+  .setwrap{
+    position:fixed;inset:0;z-index:60;display:none;
+    background:var(--bg);grid-template-columns:214px 1fr;
+  }
+  .setwrap.on{display:grid}
+  .setnav{
+    background:#0b1017;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:18px 12px 14px;min-height:0;
+  }
+  .sn-h{display:flex;gap:10px;align-items:center;padding:0 6px 15px;border-bottom:1px solid var(--line);margin-bottom:12px}
+  .logo.sm{width:30px;height:30px;border-radius:9px}
+  .logo.sm svg{width:15px;height:15px}
+  .sn-h b{font-size:13.5px;font-weight:600;display:block;line-height:1.3}
+  .sn-h small{font-size:10.5px;color:var(--tx3)}
+  .setnav nav{display:flex;flex-direction:column;gap:2px}
+  .setnav nav button{
+    justify-content:flex-start;background:transparent;border:0;padding:9px 11px;border-radius:9px;
+    color:var(--tx2);font-size:13px;
+  }
+  .setnav nav button:hover{background:#151d29;color:var(--tx)}
+  .setnav nav button.on{background:#1a2437;color:var(--tx);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+  .sn-foot{margin-top:auto;padding:10px 8px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+  .dirty{font-size:11.5px;color:var(--warn);display:none}
+  .dirty.on{display:block}
+  .pth{font-size:10px;color:var(--tx3);word-break:break-all;line-height:1.4}
+  .setmain{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .sm-h{display:flex;align-items:center;gap:12px;padding:15px 22px;border-bottom:1px solid var(--line);flex:none;flex-wrap:wrap}
+  .sm-h h2{font-size:16px;font-weight:620}
+  .sm-sub{font-size:12px;color:var(--tx3)}
+  .sm-body{flex:1;overflow:auto;padding:20px 22px 44px;min-height:0}
+  .sm-body::-webkit-scrollbar{width:9px}
+  .sm-body::-webkit-scrollbar-thumb{background:#25303f;border-radius:9px}
+
+  .frm{max-width:820px;display:flex;flex-direction:column}
+  .frow{display:grid;grid-template-columns:148px 1fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #1a2330}
+  .frow:last-child{border-bottom:0}
+  .frow > .lb{font-size:12.5px;color:var(--tx2);line-height:1.4}
+  .frow > .lb em{display:block;font-style:normal;font-size:10.5px;color:var(--tx3);margin-top:1px}
+  .fc{min-width:0}
+  .fhint{grid-column:2;font-size:11px;color:var(--tx3);margin-top:-5px;line-height:1.5}
+
+  input[type=text],input[type=number],select,textarea.sm{
+    width:100%;background:#0a0e14;border:1px solid var(--line-hi);border-radius:8px;
+    color:var(--tx);font:inherit;font-size:13px;padding:7px 10px;outline:0;transition:.15s;
+  }
+  input[type=text]:focus,input[type=number]:focus,select:focus,textarea.sm:focus{
+    border-color:#3a6bb8;box-shadow:0 0 0 3px rgba(79,147,255,.1);
+  }
+  input::placeholder,textarea::placeholder{color:#46536a}
+  textarea.sm{min-height:70px;resize:vertical;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12px;line-height:1.6}
+  select{cursor:pointer}
+  select option{background:#0e131b;color:var(--tx)}
+  .inline{display:flex;gap:8px;align-items:center}
+  .inline input{flex:1}
+  .tip{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5}
+  .tip.warn{color:var(--warn)}
+
+  .split{display:grid;grid-template-columns:242px minmax(0,1fr);gap:16px;align-items:start}
+  .pane{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .pane-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--tx3)}
+  .pane-b{padding:7px;max-height:calc(100vh - 215px);overflow:auto}
+  .pane-b::-webkit-scrollbar{width:8px}
+  .pane-b::-webkit-scrollbar-thumb{background:#25303f;border-radius:8px}
+  .it{display:flex;gap:9px;align-items:center;padding:7px 9px;border-radius:9px;cursor:pointer;border:1px solid transparent;transition:.13s}
+  .it:hover{background:#161d29}
+  .it.on{background:#1a2437;border-color:#2c3b52}
+  .it .txt{min-width:0;flex:1}
+  .it b{font-size:12.5px;font-weight:550;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it small{font-size:10.5px;color:var(--tx3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it .rm{opacity:0;padding:3px 6px;font-size:11px;border-radius:6px;background:transparent;border:0;color:var(--tx3)}
+  .it:hover .rm{opacity:1}
+  .it .rm:hover{background:#2a1a18;color:#ff9a86}
+  .fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 16px 14px}
+  .fcard-h{display:flex;align-items:center;gap:9px;padding:10px 0 8px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .fcard-h b{font-size:13.5px;font-weight:600}
+  .fcard-h .sp{flex:1}
+
+  .segcard{border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:9px;background:#0d1219}
+  .segcard .sh{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .segcard .sh b{font-size:12px;color:var(--tx2);font-weight:600}
+  .segcard .sh .sp{flex:1}
+  .segcard .srow{display:grid;grid-template-columns:88px 1fr;gap:9px;align-items:center;margin-bottom:7px}
+  .segcard .srow > span{font-size:11.5px;color:var(--tx3)}
+  .segcard .srow:last-child{margin-bottom:0}
+
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:5px 11px;border-radius:8px;border:1px solid var(--line-hi);color:var(--tx2);cursor:pointer;user-select:none;transition:.13s;background:#0f151e}
+  .chip:hover{border-color:#3b4a61}
+  .chip.on{background:#16304d;border-color:#2f5583;color:#9cc8ff}
+
+  .tres{margin-top:8px;font-size:12px;padding:8px 11px;border-radius:8px;display:none;line-height:1.5}
+  .tres.on{display:block}
+  .tres.ok{background:#0f2a1c;border:1px solid #1d4a30;color:#7fe0a6}
+  .tres.bad{background:#22120f;border:1px solid #4a241e;color:#ff9d8b}
+  .tres.deg{background:#2b2410;border:1px solid #4a3a16;color:#ffc266}
+
+  .sw{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:13px}
+  .sw input{display:none}
+  .sw i{width:38px;height:21px;border-radius:20px;background:#2a3444;position:relative;transition:.18s;flex:none}
+  .sw i::after{content:"";position:absolute;top:2.5px;left:3px;width:16px;height:16px;border-radius:50%;background:#8b98ad;transition:.18s}
+  .sw input:checked + i{background:#1c4a32}
+  .sw input:checked + i::after{left:19px;background:var(--ok)}
+
+  table.info{width:100%;border-collapse:collapse;font-size:12.5px;max-width:820px}
+  table.info td{padding:8px 10px;border-bottom:1px solid #1a2330;vertical-align:top}
+  table.info td:first-child{color:var(--tx3);width:132px;white-space:nowrap}
+  table.info td:last-child{color:var(--tx2);word-break:break-all;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12px}
+
+  .rawbox{height:calc(100vh - 170px);min-height:340px}
+
+  @media (max-width:820px){
+    .setwrap{grid-template-columns:1fr}
+    .setnav{flex-direction:row;overflow:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line);align-items:center}
+    .sn-h,.sn-foot{display:none}
+    .setnav nav{flex-direction:row}
+    .split{grid-template-columns:1fr}
+    .frow{grid-template-columns:1fr;gap:5px}
+    .fhint{grid-column:1}
+  }
+
+  /* ---------- deploy ---------- */
+  .depwrap{position:fixed;inset:0;z-index:70;background:var(--bg);display:none;flex-direction:column}
+  .depwrap.on{display:flex}
+  .dep-h{display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:1px solid var(--line);flex:none}
+  .dep-ht h2{font-size:16px;font-weight:620;line-height:1.25}
+  .dep-hs{font-size:11.5px;color:var(--tx3)}
+  .dep-h .sp,.dep-acts .sp{flex:1}
+  .dep-body{flex:1;display:grid;grid-template-columns:390px minmax(0,1fr);min-height:0}
+  .dep-left{overflow:auto;padding:16px 17px 44px;border-right:1px solid var(--line);min-height:0}
+  .dep-left::-webkit-scrollbar{width:9px}
+  .dep-left::-webkit-scrollbar-thumb{background:#25303f;border-radius:9px}
+  .dep-sec{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:9px}
+  .hwgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hw{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:8px 11px;min-width:0}
+  .hw .k{font-size:10.5px;color:var(--tx3);letter-spacing:.3px}
+  .hw .v{font-size:13.5px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hw .s{font-size:10.5px;color:var(--tx3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hw.wide{grid-column:1/-1}
+  .hw.bad{border-color:#4a241e;background:#1a1417}
+  .hw.warn{border-color:#4a3a16;background:#1a1712}
+  .dep-load{color:var(--tx3);font-size:12.5px;padding:16px;text-align:center;border:1px dashed var(--line);border-radius:11px}
+
+  .verdict{display:flex;gap:11px;align-items:flex-start;padding:12px 15px;border-radius:12px;
+    border:1px solid var(--line);background:var(--panel);margin-bottom:12px}
+  .verdict.ok{background:#0f2a1c;border-color:#1d4a30}
+  .verdict.warn{background:#2b2410;border-color:#4a3a16}
+  .verdict.block{background:#22120f;border-color:#4a241e}
+  .verdict .vi{width:26px;height:26px;border-radius:8px;flex:none;display:grid;place-items:center;
+    font-size:14px;font-weight:700;background:#1a2437;color:var(--tx2)}
+  .verdict.ok .vi{background:#12301f;color:#63e08f}
+  .verdict.warn .vi{background:#2e2410;color:#ffc266}
+  .verdict.block .vi{background:#2e1714;color:#ff8f7c}
+  .verdict b{font-size:13.5px;font-weight:620;display:block}
+  .verdict p{font-size:11.5px;color:var(--tx2);margin-top:3px;line-height:1.55}
+
+  .as{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--panel)}
+  .as-row{padding:9px 12px;border-bottom:1px solid #1a2330}
+  .as-row:last-child{border-bottom:0}
+  .as-t{display:flex;align-items:baseline;gap:7px}
+  .as-t b{font-size:12px;font-weight:600;color:var(--tx)}
+  .as-t span{font-size:11.5px;color:var(--tx2);margin-left:auto;text-align:right;max-width:58%;
+    word-break:break-word;line-height:1.4}
+  .as-n{font-size:11px;color:var(--tx3);margin-top:3px;line-height:1.5}
+  .as-row[data-l="ok"] .as-t b::before{content:"●";color:var(--ok);margin-right:5px;font-size:8px;vertical-align:2px}
+  .as-row[data-l="warn"] .as-t b::before{content:"●";color:var(--warn);margin-right:5px;font-size:8px;vertical-align:2px}
+  .as-row[data-l="block"] .as-t b::before{content:"●";color:var(--bad);margin-right:5px;font-size:8px;vertical-align:2px}
+  .as-row[data-l="block"]{background:#1a1216}
+
+  .dep-right{display:flex;flex-direction:column;min-height:0;padding:14px 18px 16px}
+  .dep-acts{display:flex;align-items:center;gap:9px;flex:none}
+  .dep-stat{font-size:11.5px;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .dep-main{flex:1;display:flex;flex-direction:column;min-height:0;gap:11px;margin-top:12px}
+
+  .dep-steps{flex:0 1 auto;max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-bottom:2px}
+  .dep-steps::-webkit-scrollbar{width:8px}
+  .dep-steps::-webkit-scrollbar-thumb{background:#25303f;border-radius:8px}
+  .stp{display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:9px;
+    border:1px solid var(--line);background:var(--panel);transition:.15s}
+  .stp-i{width:17px;height:17px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:10px;font-weight:700;background:#1a2130;color:var(--tx3)}
+  .stp-t{min-width:0;flex:1}
+  .stp-t b{font-size:12.5px;font-weight:550;display:block}
+  .stp-t small{font-size:10.5px;color:var(--tx3);display:block;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .stp-b{font-size:10.5px;padding:2px 8px;border-radius:20px;background:#1a2130;color:var(--tx3);flex:none}
+  .stp[data-s="running"]{border-color:#2f5583;background:#121a26}
+  .stp[data-s="running"] .stp-i{background:#16304d;color:#9cc8ff;animation:beat 1.2s infinite}
+  .stp[data-s="ok"] .stp-i{background:#12301f;color:#63e08f}
+  .stp[data-s="ok"] .stp-b{background:#12301f;color:#63e08f}
+  .stp[data-s="skip"] .stp-i{background:#1a2130;color:#7e8ca2}
+  .stp[data-s="fail"]{border-color:#4a241e;background:#1a1417}
+  .stp[data-s="fail"] .stp-i{background:#2e1714;color:#ff8f7c}
+  .stp[data-s="fail"] .stp-b{background:#2e1714;color:#ff8f7c}
+  .stp[data-s="manual"] .stp-i{background:#2e2410;color:#ffc266}
+  .stp[data-s="manual"] .stp-b{background:#2e2410;color:#ffc266}
+  .stp[data-s="dry"] .stp-i{background:#1a2437;color:#9cc8ff}
+
+  .logbox{flex:1;display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;background:#0a0e14}
+  .logbox-h{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:11.5px;
+    color:var(--tx3);border-bottom:1px solid var(--line);background:var(--panel)}
+  .logbox-h .sp{flex:1}
+  .sw.sm i{width:30px;height:17px}
+  .sw.sm i::after{width:12px;height:12px;top:2.5px}
+  .sw.sm input:checked + i::after{left:15px}
+  .loglines{flex:1;overflow:auto;padding:9px 13px;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    font-size:11.5px;line-height:1.62}
+  .loglines::-webkit-scrollbar{width:9px}
+  .loglines::-webkit-scrollbar-thumb{background:#25303f;border-radius:9px}
+  .ll{display:flex;gap:9px;white-space:pre-wrap;word-break:break-all}
+  .ll .tm{color:#3f4b60;flex:none}
+  .ll .tx{min-width:0;flex:1}
+  .ll.head .tx{color:#cddcf0;font-weight:600}
+  .ll.ok .tx{color:#7fe0a6}
+  .ll.warn .tx{color:#ffc266}
+  .ll.err .tx{color:#ff9d8b}
+  .ll.dim .tx{color:#66748c}
+  .ll.pipe .tx{color:#59677e}
+
+  @media (max-width:980px){
+    .dep-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+    .dep-left{border-right:0;border-bottom:1px solid var(--line);max-height:32vh;padding-bottom:16px}
+    .hwgrid{grid-template-columns:1fr 1fr 1fr}
+    .dep-steps{max-height:26vh}
+  }
+
+  /* ---------- toast ---------- */
+  .toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;gap:8px;z-index:99;align-items:center}
+  .toast{
+    background:#18202d;border:1px solid var(--line-hi);border-radius:10px;
+    padding:9px 16px;font-size:12.5px;color:var(--tx);
+    box-shadow:0 12px 30px -10px rgba(0,0,0,.8);
+    animation:up .25s ease-out;
+  }
+  .toast.err{border-color:#5a2b23;background:#22130f;color:#ff9d8b}
+  @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .empty{color:var(--tx3);font-size:13px;padding:26px;text-align:center;border:1px dashed var(--line);border-radius:var(--r)}
+
+  .errbar{
+    display:none;margin-bottom:18px;padding:11px 15px;border-radius:11px;
+    background:#22120f;border:1px solid #4a241e;color:#ff9d8b;font-size:12.5px;
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;word-break:break-all;
+  }
+  .errbar.on{display:block}
+
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .wrap{padding:0 15px}
+    header{flex-wrap:wrap;gap:12px}
+    .chain{flex-direction:column}
+    .seg{flex:0 0 auto}
+    .arrow{flex:0 0 22px;transform:rotate(90deg)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5h7M17.5 14v7"/></svg>
+      </div>
+      <div>
+        <h1 id="pTitle">服务中心</h1>
+        <p id="pSub">后台服务 · 端口映射 · 域名解析</p>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <span class="clock" id="clock"><span class="pulse"></span>连接中…</span>
+      <button id="btnRefresh" title="立即重新探测所有节点">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>刷新
+      </button>
+      <button id="btnDeploy" title="检测硬件能力，一键部署朗读服务">
+        <svg viewBox="0 0 24 24"><path d="M12 3v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>部署
+      </button>
+      <button id="btnSet" title="设置服务、映射、探测与自启">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 11.5 4a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg>设置
+      </button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <div class="errbar" id="errBar"></div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>服务</h2><div class="ln"></div><span class="cnt" id="svcCnt"></span></div>
+    <div class="grid" id="svcGrid"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>映射链路</h2><div class="ln"></div><span class="cnt" id="mapCnt"></span></div>
+    <div id="mapList"></div>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+
+<div class="drawer" id="drawer">
+  <div class="d-h">
+    <div>
+      <h3 id="dTitle">日志</h3>
+      <div class="sub" id="dSub"></div>
+    </div>
+    <div class="sp"></div>
+    <button class="mini" id="dReload">重新读取</button>
+    <button class="mini" id="dClose">关闭</button>
+  </div>
+  <div class="d-body" id="dBody"><pre class="log" id="dLog"></pre></div>
+  <div class="err" id="dErr"></div>
+  <div class="d-foot" id="dFoot"></div>
+</div>
+
+<div class="setwrap" id="setwrap">
+  <aside class="setnav">
+    <div class="sn-h">
+      <div class="logo sm">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5h7M17.5 14v7"/></svg>
+      </div>
+      <div><b>设置</b><small>services.json</small></div>
+    </div>
+    <nav id="setNav">
+      <button data-tab="general">通用</button>
+      <button data-tab="services">服务</button>
+      <button data-tab="mappings">映射链路</button>
+      <button data-tab="system">系统</button>
+      <button data-tab="raw">配置源码</button>
+    </nav>
+    <div class="sn-foot">
+      <span class="dirty" id="dirtyTag">有未保存的改动</span>
+      <span class="pth" id="snPath"></span>
+    </div>
+  </aside>
+  <section class="setmain">
+    <header class="sm-h">
+      <h2 id="smTitle">通用</h2>
+      <span class="sm-sub" id="smSub"></span>
+      <div class="sp"></div>
+      <button id="setDiscard">还原</button>
+      <button class="primary" id="setSave">保存</button>
+      <button id="setClose">关闭</button>
+    </header>
+    <div class="sm-body" id="smBody"></div>
+    <div class="err" id="setErr"></div>
+  </section>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ==================== 一键部署 ==================== -->
+<div class="depwrap" id="depwrap">
+  <header class="dep-h">
+    <div class="logo sm">
+      <svg viewBox="0 0 24 24"><path d="M12 3v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
+    </div>
+    <div class="dep-ht">
+      <h2>一键部署</h2>
+      <span class="dep-hs" id="depSub">先检测硬件能力，再决定能不能装</span>
+    </div>
+    <div class="sp"></div>
+    <button id="depRecheck" title="重新检测显卡与 torch（约 20 秒）">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>重新检测
+    </button>
+    <button id="depClose">关闭</button>
+  </header>
+
+  <div class="dep-body">
+    <!-- 左：硬件 -->
+    <aside class="dep-left" id="depLeft">
+      <div class="dep-sec">硬件能力</div>
+      <div class="hwgrid" id="hwGrid"><div class="dep-load">检测中…</div></div>
+
+      <div class="dep-sec" style="margin-top:18px">能力评估</div>
+      <div id="asBox"><div class="dep-load">检测中…</div></div>
+    </aside>
+
+    <!-- 右：部署 -->
+    <section class="dep-right">
+      <div class="verdict" id="verdict"></div>
+
+      <div class="dep-acts">
+        <button class="primary" id="depRun">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg><span id="depRunTxt">一键部署</span>
+        </button>
+        <button class="mini" id="depDry" title="只检查并列出会做什么，不实际改动">演练模式</button>
+        <button class="mini danger" id="depStop" style="display:none">中止</button>
+        <div class="sp"></div>
+        <span class="dep-stat" id="depStat"></span>
+      </div>
+
+      <div class="dep-main">
+        <div class="dep-steps" id="depSteps"><div class="dep-load">读取部署计划…</div></div>
+        <div class="logbox">
+          <div class="logbox-h">
+            <span>执行日志</span>
+            <div class="sp"></div>
+            <label class="sw sm" style="font-size:11.5px;gap:6px"><input type="checkbox" id="depFollow" checked><i></i><span>自动滚动</span></label>
+          </div>
+          <div class="loglines" id="depLog"><div class="ll dim"><span class="tx">点击「一键部署」开始，执行过程会实时出现在这里。
+已就绪的步骤会自动跳过，不会重复安装；想先看会做什么，用「演练模式」。</span></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const S = { online:'在线', degraded:'加载中', offline:'异常', unknown:'未知' };
+const CLS = { online:'on', degraded:'de', offline:'off', unknown:'un' };
+const $ = id => document.getElementById(id);
+let last = null, busy = false, errCount = 0;
+
+function toast(msg, isErr){
+  const d = document.createElement('div');
+  d.className = 'toast' + (isErr ? ' err' : '');
+  d.textContent = msg;
+  $('toasts').appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transform='translateY(6px)';
+    d.style.transition='.25s'; setTimeout(()=>d.remove(),260); }, isErr?4200:2400);
+}
+
+function fmtAge(s){
+  if (s === null || s === undefined) return '—';
+  if (s < 60) return s + ' 秒';
+  if (s < 3600) return Math.floor(s/60) + ' 分';
+  if (s < 86400) return Math.floor(s/3600) + ' 时 ' + Math.floor(s%3600/60) + ' 分';
+  return Math.floor(s/86400) + ' 天 ' + Math.floor(s%86400/3600) + ' 时';
+}
+function fmtSize(n){
+  if (!n) return '0 B';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  return (n/1048576).toFixed(2) + ' MB';
+}
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function renderStats(d){
+  const all = [...d.services, ...d.mappings];
+  const on = all.filter(x=>x.state==='online').length;
+  const de = all.filter(x=>x.state==='degraded').length;
+  const off = all.filter(x=>x.state==='offline').length;
+  const un = all.filter(x=>x.state==='unknown').length;
+  $('stats').innerHTML = [
+    ['在线', on, '正常响应', 'var(--ok)'],
+    ['加载中 / 降级', de, '进程在，尚未就绪', 'var(--warn)'],
+    ['异常', off, '需要处理', off ? 'var(--bad)' : 'var(--idle)'],
+    ['未知', un, '无探测或未配置', 'var(--idle)'],
+  ].map(([k,v,s,c])=>`<div class="stat" style="--c:${c}">
+      <div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+}
+
+function renderServices(d){
+  const g = $('svcGrid');
+  if (!d.services.length){ g.innerHTML = '<div class="empty">services.json 里还没有服务</div>'; return; }
+  $('svcCnt').textContent = d.services.length + ' 项';
+  g.innerHTML = d.services.map(s=>{
+    const c = CLS[s.state] || 'un';
+    const meta = [];
+    if (s.port) meta.push(`端口 <b>${s.port}</b>`);
+    if (s.proc_count) meta.push(`进程 <b>${s.proc_count}</b> 个`);
+    if (s.pids && s.pids.length) meta.push(`PID <b>${s.pids.slice(0,3).join(', ')}</b>`);
+    if (s.uptime != null) meta.push(`已运行 <b>${fmtAge(s.uptime)}</b>`);
+    if (s.ms != null) meta.push(`<span class="${s.ms < 300 ? 'ok2':'bad2'}">${s.ms} ms</span>`);
+    const canCtl = s.kind === 'task' || s.kind === 'process';
+    const acts = [];
+    if (canCtl){
+      acts.push(`<button class="mini" data-act="start" data-id="${s.id}">启动</button>`);
+      acts.push(`<button class="mini" data-act="restart" data-id="${s.id}">重启</button>`);
+      acts.push(`<button class="mini danger" data-act="stop" data-id="${s.id}">停止</button>`);
+    }
+    if (s.logs && s.logs.length){
+      acts.push(`<button class="mini" data-log="${esc(s.logs[0].path)}" data-name="${esc(s.name)}">日志</button>`);
+    }
+    return `<div class="card" data-s="${s.state}">
+      <div class="c-top">
+        <span class="dot ${c}"></span>
+        <span class="c-name">${esc(s.name)}</span>
+        <span class="c-tag ${c}">${S[s.state]||s.state}</span>
+      </div>
+      <div class="c-desc">${esc(s.desc||'')}</div>
+      <div class="c-meta">${meta.join('<span style="color:#2a3444">·</span>') || '<span style="color:var(--tx3)">无附加信息</span>'}</div>
+      <div class="c-acts">${acts.join('')}</div>
+      ${s.detail ? `<div class="c-detail">${esc(s.detail)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderMaps(d){
+  const g = $('mapList');
+  if (!d.mappings.length){ g.innerHTML = '<div class="empty">mappings 里还没有链路</div>'; return; }
+  $('mapCnt').textContent = d.mappings.length + ' 条';
+  g.innerHTML = d.mappings.map(m=>{
+    const c = CLS[m.state] || 'un';
+    const segs = m.segments.map((sg, i)=>{
+      const sc = CLS[sg.state] || 'un';
+      const dt = sg.state === 'online' && sg.ms != null ? sg.ms + ' ms'
+               : sg.state === 'degraded' ? (sg.detail || '降级')
+               : (sg.detail || S[sg.state] || '');
+      const arrow = i ? `<div class="arrow ${sg.state==='online'?'ok':'bad'}">→</div>` : '';
+      return `${arrow}<div class="seg ${sc}">
+        <div class="lb"><i></i>${esc(sg.label)}</div>
+        <div class="ht">${esc(sg.hint||'')}</div>
+        <div class="dt">${esc(dt)}</div>
+      </div>`;
+    }).join('');
+
+    let dd = '';
+    if (m.ddns){
+      const q = m.ddns;
+      const okAll = q.state === 'online';
+      const pill = q.state==='online'
+        ? (q.prefix_match === false ? '<span class="pill y">前缀不匹配</span>' : '<span class="pill g">解析正常</span>')
+        : '<span class="pill r">解析异常</span>';
+      const addr = (q.addrs||[]).map(a=>`<span class="mono">${esc(a)}</span>`).join('<br>');
+      dd = `<div class="ddns">
+        <span class="lab">DDNS</span>
+        <span class="pill">${esc(q.type)}</span>
+        <span class="mono">${esc(q.record)}</span>
+        ${pill}
+        ${q.owner?`<span class="pill">归属 ${esc(q.owner)}</span>`:''}
+        ${q.ms!=null?`<span class="mono" style="color:var(--tx3)">${q.ms} ms</span>`:''}
+        <div style="flex:1"></div>
+        <div style="text-align:right">${addr || `<span class="mono" style="color:var(--tx3)">${esc(q.detail||'')}</span>`}</div>
+      </div>`;
+    }
+    return `<div class="map" data-s="${m.state}">
+      <div class="m-top">
+        <span class="dot ${c}"></span>
+        <span class="m-name">${esc(m.name)}</span>
+        <span class="c-tag ${c}">${S[m.state]||m.state}</span>
+        ${m.access?`<span class="mono" style="margin-left:4px;color:var(--tx3)">${esc(m.access)}</span>`:''}
+      </div>
+      <div class="m-desc">${esc(m.desc||'')}</div>
+      <div class="chain">${segs}</div>
+      ${dd}
+    </div>`;
+  }).join('');
+}
+
+async function pull(){
+  if (busy) return;
+  busy = true;
+  try{
+    const r = await fetch('/api/state', {cache:'no-store'});
+    const d = await r.json();
+    last = d;
+    if (!d.ready){
+      $('clock').innerHTML = '<span class="pulse"></span>首次探测中…';
+      return;
+    }
+    errCount = 0;
+    if (d.panel && d.panel.title) document.title = d.panel.title;
+    if (d.panel && d.panel.title) $('pTitle').textContent = d.panel.title;
+    if (d.panel && d.panel.subtitle) $('pSub').textContent = d.panel.subtitle;
+    renderStats(d); renderServices(d); renderMaps(d);
+    if (d.last_error){
+      $('errBar').classList.add('on');
+      $('errBar').textContent = '探测循环出错（当前展示的是上一次成功的数据）：' + String(d.last_error).split('\n')[0];
+    } else {
+      $('errBar').classList.remove('on');
+    }
+    const bad = [...d.services, ...d.mappings].filter(x=>x.state==='offline').length;
+    $('clock').className = 'clock live' + (bad ? ' isbad' : '');
+    $('clock').innerHTML = `<span class="pulse"></span>${d.ts} 更新${bad?` · ${bad} 项异常`:''}`;
+  }catch(e){
+    errCount++;
+    $('clock').className = 'clock';
+    $('clock').innerHTML = `<span class="pulse"></span>面板无响应`;
+  }finally{ busy = false; }
+}
+
+document.addEventListener('click', async ev=>{
+  const b = ev.target.closest('button');
+  if (!b) return;
+  if (b.dataset.log){
+    openLog(b.dataset.log, b.dataset.name);
+    return;
+  }
+  const act = b.dataset.act, id = b.dataset.id;
+  if (!act || !id) return;
+  const label = {start:'启动', stop:'停止', restart:'重启'}[act];
+  if (act === 'stop' && !confirm(`确认停止「${b.closest('.card').querySelector('.c-name').textContent}」？`)) return;
+  b.disabled = true;
+  try{
+    const r = await fetch(`/api/service/${id}/${act}`, {method:'POST'});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '操作失败');
+    toast(`${label}已执行：` + (d.notes||[]).join('；'), false);
+    setTimeout(pull, 900);
+  }catch(e){ toast(`${label}失败：${e.message}`, true); }
+  finally{ b.disabled = false; }
+});
+
+$('btnRefresh').onclick = async ()=>{
+  $('btnRefresh').disabled = true;
+  await fetch('/api/refresh', {method:'POST'});
+  toast('已触发全量探测');
+  setTimeout(()=>{ pull(); $('btnRefresh').disabled = false; }, 700);
+};
+
+/* ---------------- 日志抽屉 ---------------- */
+let curLog = null;
+/* ---------------- 抽屉关闭 ---------------- */
+function closeDrawer(){
+  $('drawer').classList.remove('on');
+  $('mask').classList.remove('on'); curLog = null;
+}
+$('mask').onclick = closeDrawer;
+$('dClose').onclick = closeDrawer;
+
+async function openLog(path, name){
+  curLog = {path, name};
+  $('dTitle').textContent = name || '日志';
+  $('dSub').textContent = path;
+  $('dErr').classList.remove('on');
+  $('drawer').classList.add('on'); $('mask').classList.add('on');
+  await loadLog();
+}
+async function loadLog(){
+  if (!curLog) return;
+  $('dLog').textContent = '读取中…';
+  try{
+    const r = await fetch(`/api/log?lines=400&path=${encodeURIComponent(curLog.path)}`);
+    const d = await r.json();
+    if (!r.ok || !d.ok){
+      $('dLog').textContent = '';
+      $('dErr').textContent = d.error || d.detail || '读取失败';
+      $('dErr').classList.add('on');
+      return;
+    }
+    $('dErr').classList.remove('on');
+    $('dLog').textContent = d.lines.length ? d.lines.join('\n') : '（空文件）';
+    $('dFoot').innerHTML = `<span class="mono" style="color:var(--tx3)">${esc(d.path)}</span>
+      <div style="flex:1"></div>
+      <span class="mono" style="color:var(--tx3)">${d.lines.length} 行 · ${fmtSize(d.size)} · 最后修改 ${esc(d.mtime)}</span>`;
+    const body = $('dBody'); body.scrollTop = body.scrollHeight;
+  }catch(e){
+    $('dErr').textContent = e.message; $('dErr').classList.add('on');
+  }
+}
+$('dReload').onclick = loadLog;
+
+/* ================= 设置 ================= */
+let RAWCFG = null, CFG = null, META = null, SYS = null;
+let DIRTY = false, CURTAB = 'general', CURIDX = 0, CURMAP = 0;
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const KIND_LABEL = { task:'Windows 计划任务', process:'常驻进程', external:'外部设备' };
+const PROBE_LABEL = { http:'HTTP 请求', tcp:'TCP 端口', dns:'DNS 解析', task:'计划任务状态', none:'不探测' };
+const ACT_LABEL = { start:'启动', stop:'停止', restart:'重启' };
+const TABS_TITLE = { general:'通用', services:'服务', mappings:'映射链路', system:'系统', raw:'配置源码' };
+const TABS_SUB = {
+  general:'面板本身的名称、端口与刷新节奏',
+  services:'每个后台服务的探测方式与启停配置',
+  mappings:'一条链路拆成多段，分别探活',
+  system:'开机自启、运行信息、维护操作',
+  raw:'直接编辑 services.json，保存前会做校验'
+};
+
+function getP(o, p){ return p.split('|').reduce((a,k)=> (a==null ? a : a[k]), o); }
+function setP(o, p, v){
+  const ks = p.split('|'); let t = o;
+  for (let i=0;i<ks.length-1;i++){
+    const k = ks[i];
+    if (t[k]==null || typeof t[k] !== 'object') t[k] = /^\d+$/.test(ks[i+1]) ? [] : {};
+    t = t[k];
+  }
+  t[ks[ks.length-1]] = v;
+}
+
+function fRow(label, sub, ctrl, hint){
+  return `<div class="frow"><div class="lb">${label}${sub?`<em>${sub}</em>`:''}</div><div class="fc">${ctrl}</div>${hint?`<div class="fhint">${hint}</div>`:''}</div>`;
+}
+
+function stateOf(id){
+  if (!last) return 'unknown';
+  const s = (last.services||[]).find(x=>x.id===id);
+  return s ? s.state : 'unknown';
+}
+function stateCls(id){ return CLS[stateOf(id)] || 'un'; }
+function stateTxt(id){ return S[stateOf(id)] || '未探测'; }
+
+/* ---------- 打开 / 关闭 ---------- */
+async function openSettings(){
+  try{
+    const r = await fetch('/api/settings', {cache:'no-store'});
+    const d = await r.json();
+    RAWCFG = d.config; CFG = clone(d.config);
+    META = d.meta; SYS = d.system;
+    $('snPath').textContent = d.path;
+    DIRTY = false; updateDirty();
+    CURTAB = 'general';
+    $('setwrap').classList.add('on');
+    renderTab();
+  }catch(e){ toast('读取配置失败：' + e.message, true); }
+}
+function closeSettings(){
+  if (DIRTY && !confirm('有未保存的改动，确定关闭？')) return;
+  $('setwrap').classList.remove('on');
+}
+function updateDirty(){
+  $('dirtyTag').classList.toggle('on', DIRTY);
+  $('setSave').disabled = !DIRTY;
+}
+$('btnSet').onclick = openSettings;
+$('setClose').onclick = closeSettings;
+$('setDiscard').onclick = ()=>{
+  CFG = clone(RAWCFG); DIRTY = false; updateDirty(); renderTab(); toast('已还原到上次保存的配置');
+};
+
+/* ---------- 标签切换 ---------- */
+$('setNav').addEventListener('click', ev=>{
+  const b = ev.target.closest('button[data-tab]');
+  if (!b) return;
+  CURTAB = b.dataset.tab;
+  renderTab();
+});
+
+function renderTab(){
+  [...$('setNav').children].forEach(b=> b.classList.toggle('on', b.dataset.tab === CURTAB));
+  $('smTitle').textContent = TABS_TITLE[CURTAB] || '';
+  $('smSub').textContent = TABS_SUB[CURTAB] || '';
+  $('setErr').classList.remove('on');
+  const body = $('smBody');
+  if (CURTAB === 'general') body.innerHTML = tabGeneral();
+  else if (CURTAB === 'services') body.innerHTML = tabServices();
+  else if (CURTAB === 'mappings') body.innerHTML = tabMappings();
+  else if (CURTAB === 'system') body.innerHTML = tabSystem();
+  else body.innerHTML = tabRaw();
+  body.scrollTop = 0;
+}
+
+/* ---------- 通用 ---------- */
+function tabGeneral(){
+  const p = CFG.panel || (CFG.panel = {});
+  return `<div class="frm">
+    ${fRow('面板标题','浏览器标签页', `<input type="text" data-p="panel|title" value="${esc(p.title||'')}" placeholder="服务中心">`)}
+    ${fRow('副标题','标题下的一行说明', `<input type="text" data-p="panel|subtitle" value="${esc(p.subtitle||'')}" placeholder="后台服务 · 端口映射 · 域名解析">`)}
+    ${fRow('监听端口','改完需重启面板', `<div class="inline"><input type="number" data-p="panel|port" data-type="int" value="${p.port||8899}" min="1024" max="65535"><button class="mini" data-act3="restart">重启面板</button></div>`)}
+    ${fRow('刷新间隔','秒，2–600', `<input type="number" data-p="panel|refresh_sec" data-type="float" value="${p.refresh_sec||5}" min="2" max="600">`, '每次探测都会真实发起请求，间隔太短会给公网探测目标增加无谓压力；5 秒是个稳妥值。')}
+    ${fRow('监听地址','固定本机', `<input type="text" value="${esc(p.bind||'127.0.0.1')}" disabled>`)}
+  </div>
+  <div class="tip" style="margin-top:14px">面板只绑定回环地址，外网访问不到，所以不需要登录。要让手机也能看，得额外做反向代理并自己加一层防护。</div>`;
+}
+
+/* ---------- 服务 ---------- */
+function tabServices(){
+  const list = CFG.services || (CFG.services = []);
+  if (CURIDX >= list.length) CURIDX = Math.max(0, list.length - 1);
+  if (CURIDX < 0) CURIDX = 0;
+  const items = list.map((s,i)=>`
+    <div class="it ${i===CURIDX?'on':''}" data-svc="${i}">
+      <span class="dot ${stateCls(s.id)}"></span>
+      <div class="txt"><b>${esc(s.name||'(未命名)')}</b><small>${KIND_LABEL[s.kind]||'-'}${s.port?' · '+s.port:''}</small></div>
+      <button class="rm" data-delsvc="${i}" title="删除">删</button>
+    </div>`).join('');
+  return `<div class="split">
+    <div class="pane">
+      <div class="pane-h"><span>${list.length} 个服务</span><button class="mini" id="addSvc">新增</button></div>
+      <div class="pane-b">${items || '<div style="padding:14px;color:var(--tx3);font-size:12px">还没有服务，点右上「新增」</div>'}</div>
+    </div>
+    <div class="fcard">${svcForm(list[CURIDX])}</div>
+  </div>`;
+}
+
+function svcForm(s){
+  if (!s) return '<div style="padding:34px;text-align:center;color:var(--tx3);font-size:13px">左侧点「新增」加一个服务</div>';
+  const P = `services|${CURIDX}`;
+  const acts = s.actions || ['start','stop','restart'];
+  const hasLog = (s.logs||[]).length;
+  return `
+  <div class="fcard-h">
+    <b>${esc(s.name||'新服务')}</b>
+    <span class="c-tag ${stateCls(s.id)}">${stateTxt(s.id)}</span>
+    <div class="sp"></div>
+    <button class="mini" data-copysvc="${CURIDX}">复制</button>
+  </div>
+  <div class="frm">
+  ${fRow('名称','卡片上的标题', `<input type="text" data-p="${P}|name" value="${esc(s.name||'')}" placeholder="朗读网关">`)}
+  ${fRow('标识 id','英文数字，唯一', `<input type="text" data-p="${P}|id" value="${esc(s.id||'')}" placeholder="tts-gateway">`)}
+  ${fRow('分组','归类用，可空', `<input type="text" data-p="${P}|group" value="${esc(s.group||'')}" placeholder="本地服务">`)}
+  ${fRow('描述','一句话说明', `<input type="text" data-p="${P}|desc" value="${esc(s.desc||'')}">`)}
+  ${fRow('托管方式','决定能不能启停', `<select data-p="${P}|kind" data-rerender="1">${META.kinds.map(k=>`<option value="${k}" ${s.kind===k?'selected':''}>${KIND_LABEL[k]}</option>`).join('')}</select>`)}
+  ${s.kind==='task' ? fRow('计划任务名','', `<div class="inline"><input type="text" data-p="${P}|task" value="${esc(s.task||'')}" placeholder="BreezeTTSGateway"><button class="mini" data-testtask="1">查状态</button></div>`, '面板用 PowerShell 的计划任务接口，不走 schtasks。') : ''}
+  ${s.kind==='process' ? fRow('启动命令','', `<input type="text" data-p="${P}|cmd" value="${esc(s.cmd||'')}" placeholder="python.exe app.py">`) : ''}
+  ${s.kind==='process' ? fRow('工作目录','', `<input type="text" data-p="${P}|cwd" value="${esc(s.cwd||'')}" placeholder="E:\\path">`) : ''}
+  ${fRow('进程关键字','逗号分隔', `<input type="text" data-p="${P}|match" data-type="tags" value="${esc((s.match||[]).join(', '))}" placeholder="legado_gateway.py">`, '用命令行里的片段定位进程，用来查 PID 和停止。')}
+  ${fRow('端口','仅展示，可空', `<input type="number" data-p="${P}|port" data-type="int" value="${s.port||''}" placeholder="7861">`)}
+  ${fRow('可执行操作','外部设备可不需要', `<div class="chips">${META.actions.map(a=>`<span class="chip ${acts.includes(a)?'on':''}" data-act2="${a}">${ACT_LABEL[a]}</span>`).join('')}</div>`)}
+  </div>
+  <div style="border-top:1px solid var(--line);margin:6px -16px 0;padding:0 16px"></div>
+  <div class="frm">${probeForm(`${P}|probe`, s.probe || {}, 'svc')}</div>
+  <div style="border-top:1px solid var(--line);margin:6px -16px 0;padding:0 16px"></div>
+  <div class="frm">
+  ${fRow('日志文件','每行一个路径', `<textarea class="sm" data-p="${P}|logs" data-type="lines" placeholder="E:\\path\\app.log">${esc((s.logs||[]).join('\n'))}</textarea>`, hasLog?'卡片上的「日志」按钮会读第一行这个文件。':'留空则卡片不显示日志按钮。')}
+  </div>`;
+}
+
+/* ---------- 探测配置（服务与分段共用） ---------- */
+function probeForm(P, pr, scope){
+  const pt = pr.type || 'tcp';
+  let fields = '';
+  if (pt === 'http'){
+    fields += fRow('URL','', `<div class="inline"><input type="text" data-p="${P}|url" value="${esc(pr.url||'')}" placeholder="http://127.0.0.1:7861/health"><button class="mini" data-probe="${P}">测试</button></div>`, '主机部分可以写 <code>@self</code>，运行时自动换成本机局域网 IP。');
+    fields += fRow('超时','秒', `<input type="number" data-p="${P}|timeout" data-type="float" value="${pr.timeout||5}" step="0.5">`);
+    fields += fRow('算作加载中','状态码', `<input type="text" data-p="${P}|degraded_on" data-type="ints" value="${esc((pr.degraded_on||[]).join(','))}" placeholder="503">`, '填 503 这类状态码：返回它时显示「加载中」而不是「异常」，适合启动慢的服务。');
+    fields += fRow('加载中文案','', `<input type="text" data-p="${P}|degraded_hint" value="${esc(pr.degraded_hint||'')}" placeholder="模型加载中">`);
+  } else if (pt === 'tcp'){
+    fields += fRow('主机','可填 @self', `<input type="text" data-p="${P}|host" value="${esc(pr.host||'')}" placeholder="@self">`);
+    fields += fRow('或解析域名','优先于主机', `<div class="inline"><input type="text" data-p="${P}|resolve" value="${esc(pr.resolve||'')}" placeholder="morningtts.chentimeout.top"><button class="mini" data-probe="${P}">测试</button></div>`, '填了域名就先解析成 IPv6 再探端口。目标只监听 IPv6 时必须用这个，用 IPv4 会一直显示「拒绝连接」。');
+    fields += fRow('端口','', `<input type="number" data-p="${P}|port" data-type="int" value="${pr.port||''}">`);
+    fields += fRow('超时','秒', `<input type="number" data-p="${P}|timeout" data-type="float" value="${pr.timeout||3}" step="0.5">`);
+  } else if (pt === 'dns'){
+    fields += fRow('域名','', `<div class="inline"><input type="text" data-p="${P}|domain" value="${esc(pr.domain||'')}" placeholder="morningtts.chentimeout.top"><button class="mini" data-probe="${P}">测试</button></div>`);
+    fields += fRow('记录类型','', `<select data-p="${P}|record_type">${['AAAA','A'].map(t=>`<option value="${t}" ${((pr.record_type||'AAAA')===t)?'selected':''}>${t}</option>`).join('')}</select>`);
+  } else if (pt === 'none'){
+    fields += `<div class="tip" style="padding:8px 0">只登记，不探测。状态会显示为「未知」。</div>`;
+  } else if (pt === 'task'){
+    fields += `<div class="tip" style="padding:8px 0">读取服务里配置的计划任务状态。</div>`;
+  }
+  return `
+  <div class="frow" style="padding-top:12px"><div class="lb">探测方式<em>决定状态灯怎么亮</em></div><div class="fc">
+    <select data-p="${P}|type" data-rerender="1">${META.probe_types.map(t=>`<option value="${t}" ${pt===t?'selected':''}>${PROBE_LABEL[t]}</option>`).join('')}</select>
+  </div></div>
+  ${fields}
+  <div class="tres" id="tres"></div>`;
+}
+
+/* ---------- 映射 ---------- */
+function tabMappings(){
+  const list = CFG.mappings || (CFG.mappings = []);
+  if (CURMAP >= list.length) CURMAP = Math.max(0, list.length - 1);
+  if (CURMAP < 0) CURMAP = 0;
+  const items = list.map((m,i)=>`
+    <div class="it ${i===CURMAP?'on':''}" data-map="${i}">
+      <span class="dot ${mapStateCls(m.id)}"></span>
+      <div class="txt"><b>${esc(m.name||'(未命名)')}</b><small>${(m.segments||[]).length} 段</small></div>
+      <button class="rm" data-delmap="${i}" title="删除">删</button>
+    </div>`).join('');
+  return `<div class="split">
+    <div class="pane">
+      <div class="pane-h"><span>${list.length} 条链路</span><button class="mini" id="addMap">新增</button></div>
+      <div class="pane-b">${items || '<div style="padding:14px;color:var(--tx3);font-size:12px">还没有链路</div>'}</div>
+    </div>
+    <div class="fcard">${mapForm(list[CURMAP])}</div>
+  </div>`;
+}
+function mapStateOf(id){
+  if (!last) return 'unknown';
+  const m = (last.mappings||[]).find(x=>x.id===id);
+  return m ? m.state : 'unknown';
+}
+function mapStateCls(id){ return CLS[mapStateOf(id)] || 'un'; }
+
+function mapForm(m){
+  if (!m) return '<div style="padding:34px;text-align:center;color:var(--tx3);font-size:13px">左侧点「新增」加一条链路</div>';
+  const P = `mappings|${CURMAP}`;
+  const segs = m.segments || (m.segments = []);
+  const d = m.ddns || {};
+  const hasDDNS = !!m.ddns;
+  const segHTML = segs.map((sg,j)=>{
+    const SP = `${P}|segments|${j}|probe`;
+    const st = (sg.probe||{}).type || 'tcp';
+    let sf = '';
+    if (st === 'http'){
+      sf += `<div class="srow"><span>URL</span><div class="inline"><input type="text" data-p="${SP}|url" value="${esc((sg.probe||{}).url||'')}"><button class="mini" data-probe="${SP}">测试</button></div></div>`;
+      sf += `<div class="srow"><span>超时/秒</span><input type="number" data-p="${SP}|timeout" data-type="float" value="${(sg.probe||{}).timeout||5}" step="0.5"></div>`;
+    } else if (st === 'tcp'){
+      sf += `<div class="srow"><span>主机</span><input type="text" data-p="${SP}|host" value="${esc((sg.probe||{}).host||'')}" placeholder="@self"></div>`;
+      sf += `<div class="srow"><span>或域名</span><div class="inline"><input type="text" data-p="${SP}|resolve" value="${esc((sg.probe||{}).resolve||'')}"><button class="mini" data-probe="${SP}">测试</button></div></div>`;
+      sf += `<div class="srow"><span>端口</span><input type="number" data-p="${SP}|port" data-type="int" value="${(sg.probe||{}).port||''}"></div>`;
+    }
+    return `<div class="segcard">
+      <div class="sh"><b>第 ${j+1} 段</b>
+        <div class="sp"></div>
+        <button class="mini" data-segmove="-1" data-j="${j}">上移</button>
+        <button class="mini" data-segmove="1" data-j="${j}">下移</button>
+        <button class="mini danger" data-segdel="${j}">删除</button>
+      </div>
+      <div class="srow"><span>标签</span><input type="text" data-p="${P}|segments|${j}|label" value="${esc(sg.label||'')}" placeholder="本机端口"></div>
+      <div class="srow"><span>地址说明</span><input type="text" data-p="${P}|segments|${j}|hint" value="${esc(sg.hint||'')}" placeholder="127.0.0.1:7861"></div>
+      <div class="srow"><span>探测</span><select data-p="${SP}|type" data-rerender="1">${META.probe_types.filter(t=>t!=='task').map(t=>`<option value="${t}" ${st===t?'selected':''}>${PROBE_LABEL[t]}</option>`).join('')}</select></div>
+      ${sf}
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="fcard-h">
+    <b>${esc(m.name||'新链路')}</b>
+    <span class="c-tag ${mapStateCls(m.id)}">${S[mapStateOf(m.id)]||'未探测'}</span>
+    <div class="sp"></div>
+    <button class="mini" data-copymap="${CURMAP}">复制</button>
+  </div>
+  <div class="frm">
+  ${fRow('名称','', `<input type="text" data-p="${P}|name" value="${esc(m.name||'')}" placeholder="朗读服务 · 公网入口">`)}
+  ${fRow('标识 id','英文数字，唯一', `<input type="text" data-p="${P}|id" value="${esc(m.id||'')}">`)}
+  ${fRow('描述','', `<input type="text" data-p="${P}|desc" value="${esc(m.desc||'')}">`)}
+  ${fRow('访问地址','展示用', `<input type="text" data-p="${P}|access" value="${esc(m.access||'')}" placeholder="http://example.com/health">`)}
+  </div>
+  <div style="margin:18px 0 10px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:12px;color:var(--tx3);letter-spacing:.4px">链路分段</span>
+    <div style="flex:1;height:1px;background:var(--line)"></div>
+    <button class="mini" id="addSeg">加一段</button>
+  </div>
+  ${segHTML || '<div class="tip">至少要有一段，点右上「加一段」。</div>'}
+  <div style="margin:18px 0 10px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:12px;color:var(--tx3);letter-spacing:.4px">DDNS 检查</span>
+    <div style="flex:1;height:1px;background:var(--line)"></div>
+    <label class="sw" style="font-size:12px"><input type="checkbox" id="ddnsOn" ${hasDDNS?'checked':''}><i></i><span>${hasDDNS?'已启用':'不检查'}</span></label>
+  </div>
+  ${hasDDNS ? `<div class="frm">
+    ${fRow('域名记录','', `<input type="text" data-p="${P}|ddns|record" value="${esc(d.record||'')}" placeholder="morningtts.chentimeout.top">`)}
+    ${fRow('记录类型','', `<select data-p="${P}|ddns|type">${['AAAA','A'].map(t=>`<option ${(d.type||'AAAA')===t?'selected':''}>${t}</option>`).join('')}</select>`)}
+    ${fRow('归属设备','展示用', `<input type="text" data-p="${P}|ddns|owner" value="${esc(d.owner||'')}" placeholder="飞牛 NAS">`)}
+  </div>` : ''}
+  <div class="tres" id="tres"></div>`;
+}
+
+/* ---------- 系统 ---------- */
+function tabSystem(){
+  const s = SYS || {};
+  return `<div class="frm" style="margin-bottom:20px">
+    ${fRow('开机自启', `计划任务 ${esc(s.autostart_task||'ServicePanel')}`, `<label class="sw"><input type="checkbox" id="swAuto" ${s.autostart?'checked':''}><i></i><span id="swAutoTxt">${s.autostart?'已开启':'已关闭'}</span></label>`, '关闭只影响下次开机，当前进程不受影响。')}
+  </div>
+  <div style="margin:18px 0 10px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:12px;color:var(--tx3);letter-spacing:.4px">运行信息</span>
+    <div style="flex:1;height:1px;background:var(--line)"></div>
+  </div>
+  <table class="info">
+    <tr><td>Python</td><td>${esc(s.python||'')}</td></tr>
+    <tr><td>解释器</td><td>${esc(s.exe||'')}</td></tr>
+    <tr><td>进程 PID</td><td>${esc(String(s.pid||''))}</td></tr>
+    <tr><td>启动时间</td><td>${esc(s.started||'')}（已运行 ${fmtAge(s.uptime)}）</td></tr>
+    <tr><td>程序目录</td><td>${esc(s.base||'')}</td></tr>
+    <tr><td>配置文件</td><td>${esc(s.config_path||'')}</td></tr>
+    <tr><td>面板日志</td><td>${esc(s.log_path||'')}</td></tr>
+    <tr><td>自启任务</td><td>${s.autostart_exists ? '已注册 · '+esc(s.autostart_state||'') : '未注册'}</td></tr>
+  </table>
+  <div style="margin-top:18px;display:flex;gap:9px;flex-wrap:wrap">
+    <button data-act3="opendir">打开程序目录</button>
+    <button data-act3="openfile">用编辑器打开配置</button>
+    <button data-act3="restart">重启面板</button>
+  </div>
+  <div class="tip" style="margin-top:12px">保存配置时会在同目录留一份 <code>services.json.bak</code>，改坏了可以拿它还原。</div>`;
+}
+
+/* ---------- 源码 ---------- */
+function tabRaw(){
+  return `<textarea class="sm rawbox" id="rawText" spellcheck="false">${esc(JSON.stringify(CFG, null, 2))}</textarea>
+  <div class="tip" style="margin-top:10px">直接改 JSON 也可以，保存前会做结构校验；切到别的标签时改动会带过去。</div>`;
+}
+
+/* ---------- 编辑事件 ---------- */
+$('smBody').addEventListener('input', ev=>{
+  const el = ev.target;
+  if (el.id === 'rawText') return;
+  const p = el.dataset.p;
+  if (!p) return;
+  let v = el.type === 'checkbox' ? el.checked : el.value;
+  const t = el.dataset.type;
+  if (t === 'int') v = v === '' ? undefined : (parseInt(v,10) || 0);
+  else if (t === 'float') v = v === '' ? undefined : (parseFloat(v) || 0);
+  else if (t === 'lines') v = v.split('\n').map(x=>x.trim()).filter(Boolean);
+  else if (t === 'tags') v = v.split(',').map(x=>x.trim()).filter(Boolean);
+  else if (t === 'ints') v = v.split(',').map(x=>parseInt(x.trim(),10)).filter(n=>!isNaN(n));
+  setP(CFG, p, v);
+  DIRTY = true; updateDirty();
+});
+$('smBody').addEventListener('change', ev=>{
+  const el = ev.target;
+  if (el.id === 'rawText'){
+    try{
+      CFG = JSON.parse(el.value);
+      DIRTY = true; updateDirty();
+      toast('已载入 JSON 改动');
+    }catch(e){
+      $('setErr').textContent = 'JSON 语法错误：' + e.message;
+      $('setErr').classList.add('on');
+    }
+    return;
+  }
+  if (el.dataset.rerender) renderTab();
+  if (el.id === 'ddnsOn'){
+    if (el.checked){
+      setP(CFG, `mappings|${CURMAP}|ddns`, {record:'', type:'AAAA', owner:''});
+    } else {
+      delete CFG.mappings[CURMAP].ddns;
+    }
+    DIRTY = true; updateDirty(); renderTab();
+  }
+});
+
+/* ---------- 点击事件 ---------- */
+$('smBody').addEventListener('click', async ev=>{
+  const t = ev.target;
+  const b = t.closest('button');
+
+  // 选中服务 / 映射
+  const svcItem = t.closest('.it[data-svc]');
+  if (svcItem){ CURIDX = +svcItem.dataset.svc; renderTab(); return; }
+  const mapItem = t.closest('.it[data-map]');
+  if (mapItem){ CURMAP = +mapItem.dataset.map; renderTab(); return; }
+
+  if (!b) {
+    // chips（可执行操作）
+    const chip = t.closest('.chip[data-act2]');
+    if (chip){
+      const P = `services|${CURIDX}`;
+      const s = CFG.services[CURIDX];
+      let arr = s.actions || [];
+      const a = chip.dataset.act2;
+      arr = arr.includes(a) ? arr.filter(x=>x!==a) : [...arr, a];
+      s.actions = arr;
+      chip.classList.toggle('on'); DIRTY = true; updateDirty();
+      return;
+    }
+    return;
+  }
+
+  // 新增 / 复制 / 删除服务
+  if (b.id === 'addSvc'){
+    const n = (CFG.services||[]).length + 1;
+    CFG.services.push({
+      id: 'svc' + Math.random().toString(36).slice(2,6), name: '新服务 ' + n,
+      group: '本地服务', desc: '', kind: 'external', match: [],
+      probe: { type: 'tcp', host: '127.0.0.1', port: 80, timeout: 3 },
+      logs: [], actions: ['start','stop','restart']
+    });
+    CURIDX = CFG.services.length - 1; DIRTY = true; updateDirty(); renderTab();
+    return;
+  }
+  if (b.dataset.copysvc){
+    const i = +b.dataset.copysvc;
+    const c = clone(CFG.services[i]);
+    c.id = c.id + '-' + Math.random().toString(36).slice(2,5);
+    c.name = c.name + ' 副本';
+    CFG.services.splice(i+1, 0, c);
+    CURIDX = i+1; DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.dataset.delsvc !== undefined){
+    const i = +b.dataset.delsvc;
+    if (!confirm(`删除服务「${CFG.services[i].name}」？`)) return;
+    CFG.services.splice(i,1);
+    if (CURIDX >= CFG.services.length) CURIDX = CFG.services.length - 1;
+    DIRTY = true; updateDirty(); renderTab(); return;
+  }
+
+  // 新增 / 复制 / 删除映射、分段
+  if (b.id === 'addMap'){
+    const n = (CFG.mappings||[]).length + 1;
+    CFG.mappings.push({
+      id: 'map' + Math.random().toString(36).slice(2,6), name: '新链路 ' + n,
+      group: '映射链路', desc: '', access: '',
+      segments: [{ label: '本机端口', hint: '127.0.0.1:80',
+        probe: { type: 'tcp', host: '127.0.0.1', port: 80, timeout: 3 } }]
+    });
+    CURMAP = CFG.mappings.length - 1; DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.dataset.copymap){
+    const i = +b.dataset.copymap;
+    const c = clone(CFG.mappings[i]);
+    c.id = c.id + '-' + Math.random().toString(36).slice(2,5);
+    c.name = c.name + ' 副本';
+    CFG.mappings.splice(i+1, 0, c);
+    CURMAP = i+1; DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.dataset.delmap !== undefined){
+    const i = +b.dataset.delmap;
+    if (!confirm(`删除链路「${CFG.mappings[i].name}」？`)) return;
+    CFG.mappings.splice(i,1);
+    if (CURMAP >= CFG.mappings.length) CURMAP = CFG.mappings.length - 1;
+    DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.id === 'addSeg'){
+    const segs = CFG.mappings[CURMAP].segments || (CFG.mappings[CURMAP].segments = []);
+    segs.push({ label: '新分段', hint: '', probe: { type: 'tcp', host: '127.0.0.1', port: 80, timeout: 3 } });
+    DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.dataset.segdel !== undefined){
+    const j = +b.dataset.segdel;
+    const segs = CFG.mappings[CURMAP].segments;
+    if (segs.length <= 1){ toast('至少要留一段', true); return; }
+    segs.splice(j,1); DIRTY = true; updateDirty(); renderTab(); return;
+  }
+  if (b.dataset.segmove){
+    const j = +b.dataset.j, dir = +b.dataset.segmove;
+    const segs = CFG.mappings[CURMAP].segments;
+    const k = j + dir;
+    if (k < 0 || k >= segs.length) return;
+    [segs[j], segs[k]] = [segs[k], segs[j]];
+    DIRTY = true; updateDirty(); renderTab(); return;
+  }
+
+  // 测试探测
+  if (b.dataset.probe){
+    const P = b.dataset.probe;
+    const probe = getP(CFG, P);
+    const svc = P.startsWith('services') ? getP(CFG, P.split('|probe')[0]) : {};
+    b.disabled = true; b.textContent = '测试中';
+    try{
+      const r = await fetch('/api/probe_test', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({probe: probe, service: svc})});
+      const d = await r.json();
+      showTres(d);
+    }catch(e){ showTres({state:'unknown', detail:e.message}); }
+    b.disabled = false; b.textContent = '测试';
+    return;
+  }
+
+  // 查计划任务状态
+  if (b.dataset.testtask){
+    const task = getP(CFG, `services|${CURIDX}|task`);
+    if (!task){ toast('先填任务名', true); return; }
+    b.disabled = true;
+    try{
+      const r = await fetch('/api/probe_test', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({probe:{type:'task'}, service:{task, kind:'task'}})});
+      showTres(await r.json());
+    }catch(e){ showTres({state:'unknown', detail:e.message}); }
+    b.disabled = false;
+    return;
+  }
+
+  // 系统操作
+  if (b.dataset.act3){
+    const a = b.dataset.act3;
+    if (a === 'opendir' || a === 'openfile'){
+      fetch('/api/open', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({what: a === 'opendir' ? 'dir' : 'config'})});
+      return;
+    }
+    if (a === 'restart'){
+      if (!confirm('重启面板？保存过但未应用的设置会生效，页面会短暂打不开。')) return;
+      await fetch('/api/system/panel', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action:'restart'})});
+      toast('正在重启，5 秒后刷新页面');
+      setTimeout(()=>location.reload(), 9000);
+      return;
+    }
+  }
+});
+
+$('smBody').addEventListener('change', async ev=>{
+  if (ev.target.id !== 'swAuto') return;
+  const on = ev.target.checked;
+  $('swAutoTxt').textContent = on ? '设置中…' : '设置中…';
+  try{
+    const r = await fetch('/api/system/autostart', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({enabled: on})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '操作失败');
+    SYS = d.system || SYS;
+    $('swAutoTxt').textContent = on ? '已开启' : '已关闭';
+    toast(d.detail);
+  }catch(e){
+    $('swAutoTxt').textContent = on ? '已关闭' : '已开启';
+    ev.target.checked = !on;
+    toast('设置失败：' + e.message, true);
+  }
+});
+
+function showTres(d){
+  const cls = d.state === 'online' ? 'ok' : d.state === 'degraded' ? 'deg' : d.state === 'unknown' ? '' : 'bad';
+  const label = { online:'通', degraded:'降级', offline:'不通', unknown:'未知' }[d.state] || d.state;
+  const text = `${label} · ${d.detail || ''}${d.ms != null ? ` · ${d.ms} ms` : ''}${d.elapsed != null ? ` · 耗时 ${d.elapsed} ms` : ''}`;
+  const el = $('tres');
+  if (el){
+    el.className = 'tres on ' + cls;
+    el.textContent = text;
+    el.scrollIntoView({block:'nearest', behavior:'smooth'});
+  } else {
+    toast(text, cls !== 'ok');
+  }
+}
+
+/* ---------- 保存 ---------- */
+$('setSave').onclick = async ()=>{
+  const btn = $('setSave');
+  btn.disabled = true; btn.textContent = '保存中…';
+  $('setErr').classList.remove('on');
+  try{
+    const r = await fetch('/api/settings', {method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({config: CFG})});
+    const d = await r.json();
+    if (!r.ok){
+      const errs = d.errors || [d.detail || '保存失败'];
+      $('setErr').innerHTML = '<b>配置有问题，未保存：</b><br>' + errs.map(e=>'· '+esc(e)).join('<br>');
+      $('setErr').classList.add('on');
+      $('setErr').scrollIntoView({block:'nearest'});
+      return;
+    }
+    RAWCFG = clone(CFG);
+    DIRTY = false; updateDirty();
+    toast('已保存' + ((d.notes||[]).length ? ' · ' + d.notes.join('；') : ''));
+    setTimeout(pull, 1200);
+    setTimeout(pull, 3400);
+  }catch(e){
+    $('setErr').textContent = e.message; $('setErr').classList.add('on');
+  }finally{
+    btn.textContent = '保存';
+    updateDirty();
+  }
+};
+
+document.addEventListener('keydown', ev=>{
+  if (ev.key === 'Escape' && $('setwrap').classList.contains('on')) closeSettings();
+});
+
+/* ---------------- 一键部署 ---------------- */
+let DEP = { hw:null, assess:null, steps:[], job:null, cursor:0, timer:null, busy:false, blocked:false };
+const DST = { pending:'等待', running:'进行中', ok:'完成', skip:'已就绪', fail:'失败', manual:'需人工', dry:'演练' };
+const DSI = { pending:'·', running:'◐', ok:'✓', skip:'↷', fail:'✕', manual:'!', dry:'○' };
+
+function hwCards(hw){
+  const g = (hw.gpu||[])[0] || null;
+  const t = hw.torch || {};
+  const c = [];
+  const card = (k,v,s,cls,wide)=>`<div class="hw ${wide?'wide':''} ${cls||''}">
+      <div class="k">${esc(k)}</div><div class="v" title="${esc(v)}">${esc(v)}</div>
+      ${s?`<div class="s" title="${esc(s)}">${esc(s)}</div>`:''}</div>`;
+  if (g){
+    c.push(card('显卡', g.name + ' · ' + g.vram_gb + ' GB', `当前空闲 ${g.free_gb} GB`, '', true));
+    c.push(card('计算能力', 'sm ' + (g.cc||'?'), '需 ≥ 7.5'));
+    c.push(card('显卡驱动', g.driver, '需 ≥ 525'));
+  } else {
+    c.push(card('显卡', '未检测到 NVIDIA GPU', 'nvidia-smi 无输出', 'bad', true));
+    c.push(card('计算能力', '—', '需 ≥ 7.5', 'bad'));
+    c.push(card('显卡驱动', '—', '需 ≥ 525', 'bad'));
+  }
+  c.push(card('内存', hw.ram.total_gb + ' GB', `可用 ${hw.ram.avail_gb} GB`));
+  c.push(card('磁盘', hw.disk.drive + ' 剩 ' + hw.disk.free_gb + ' GB', `已用 ${hw.disk.used_pct}%`));
+  if (t.ok && t.available){
+    c.push(card('PyTorch', t.version, `CUDA ${t.cuda} · ${t.bf16?'bf16 支持':'无 bf16'}`, '', true));
+  } else if (t.ok){
+    c.push(card('PyTorch', t.version + '（CUDA 不可用）', t.error||'装成了 CPU 版', 'bad', true));
+  } else {
+    c.push(card('PyTorch', '未安装', '首次部署会装 CUDA 版', '', true));
+  }
+  c.push(card('处理器', hw.cpu.name, `${hw.cpu.cores} 核 / ${hw.cpu.threads} 线程`, '', true));
+  return c.join('');
+}
+
+function renderAssess(a){
+  const ic = { ok:'✓', warn:'!', block:'✕' }[a.level] || '·';
+  const extra = a.fast_path ? '这张卡显存够开 fast path（flash-attn）。'
+                            : '这张卡只能走 eager 路径，生成 1 秒音频约需 2.6 秒。';
+  const sub = { ok:'已经就绪的步骤会自动跳过，不会重复安装。',
+                warn:'能装，但下面标黄的地方值得先看一眼。',
+                block:'先解决标红的项，否则部署一定会失败。' }[a.level] || '';
+  $('verdict').className = 'verdict ' + a.level;
+  $('verdict').innerHTML = `<div class="vi">${ic}</div><div><b>${esc(a.verdict)}</b><p>${esc(sub)} ${esc(extra)}</p></div>`;
+
+  $('asBox').innerHTML = '<div class="as">' + a.items.map(it=>`
+    <div class="as-row" data-l="${it.level}">
+      <div class="as-t"><b>${esc(it.label)}</b><span title="${esc(it.actual)}">${esc(it.actual)}</span></div>
+      ${it.note ? `<div class="as-n">${esc(it.note)}</div>` : ''}
+    </div>`).join('') + '</div>';
+}
+
+function renderSteps(list, fromJob){
+  const box = $('depSteps');
+  box.innerHTML = list.map(s=>{
+    const st = fromJob ? (s.state||'pending')
+                       : (s.id==='selftest' ? 'pending' : (s.ready ? 'skip' : 'pending'));
+    let label = DST[st] || st;
+    if (!fromJob) label = s.id==='selftest' ? '每次执行' : (s.ready ? '已就绪' : '待部署');
+    const detail = s.detail || s.desc || '';
+    return `<div class="stp" data-s="${st}" data-id="${s.id}">
+      <span class="stp-i">${DSI[st]||'·'}</span>
+      <div class="stp-t"><b>${esc(s.name)}</b><small title="${esc(detail)}">${esc(detail)}</small></div>
+      <span class="stp-b">${esc(label)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadPlan(){
+  $('hwGrid').innerHTML = '<div class="dep-load">检测中…</div>';
+  $('asBox').innerHTML = '<div class="dep-load">检测中…</div>';
+  $('depSteps').innerHTML = '<div class="dep-load">读取部署计划…</div>';
+  try{
+    const r = await fetch('/api/deploy/plan');
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.detail || '读取失败');
+    DEP.hw = d.hw; DEP.assess = d.assess; DEP.steps = d.steps;
+    DEP.blocked = d.assess.level === 'block';
+    $('hwGrid').innerHTML = hwCards(d.hw);
+    renderAssess(d.assess);
+    renderSteps(d.steps, false);
+    $('depSub').textContent = `检测于 ${d.hw.time}`;
+    setRunning(false);
+    if (d.running){
+      attachJob(d.running.id);
+    }
+  }catch(e){
+    const html = `<div class="dep-load" style="color:#ff9d8b;border-color:#4a241e">${esc(e.message)}</div>`;
+    $('hwGrid').innerHTML = html; $('asBox').innerHTML = html; $('depSteps').innerHTML = html;
+  }
+}
+
+async function openDeploy(){
+  $('depwrap').classList.add('on');
+  await loadPlan();
+}
+function closeDeploy(){
+  $('depwrap').classList.remove('on');
+  if (DEP.timer){ clearTimeout(DEP.timer); DEP.timer = null; }
+}
+
+function appendLines(lines){
+  if (!lines || !lines.length) return;
+  const box = $('depLog');
+  const frag = document.createDocumentFragment();
+  for (const l of lines){
+    const el = document.createElement('div');
+    el.className = 'll ' + (l.level || 'info');
+    const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = l.t;
+    const tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = l.text;
+    el.appendChild(tm); el.appendChild(tx);
+    frag.appendChild(el);
+  }
+  box.appendChild(frag);
+  while (box.children.length > 1600) box.removeChild(box.firstChild);
+  if ($('depFollow').checked) box.scrollTop = box.scrollHeight;
+}
+
+function setRunning(on, dry){
+  DEP.busy = on;
+  $('depRun').disabled = on || !!DEP.blocked;
+  $('depDry').disabled = on;
+  $('depRecheck').disabled = on;
+  $('depStop').style.display = on ? '' : 'none';
+  $('depRunTxt').textContent = on ? (dry ? '演练中…' : '部署中…')
+                                   : (DEP.blocked ? '硬件不满足' : '一键部署');
+}
+
+function attachJob(id){
+  DEP.job = id; DEP.cursor = 0;
+  $('depLog').innerHTML = '';
+  setRunning(true, false);
+  DEP.timer = setTimeout(pollJob, 120);
+}
+
+async function pollJob(){
+  if (!DEP.job) return;
+  let d;
+  try{
+    const r = await fetch(`/api/deploy/job/${DEP.job}?since=${DEP.cursor}`);
+    if (!r.ok) throw new Error('任务已失效');
+    d = await r.json();
+  }catch(e){
+    setRunning(false);
+    DEP.job = null;
+    toast('日志流中断：' + e.message, true);
+    return;
+  }
+  appendLines(d.lines);
+  DEP.cursor = d.cursor;
+  renderSteps(d.steps, true);
+  const done = d.steps.filter(s=>['ok','skip','fail','manual','dry'].includes(s.state)).length;
+  $('depStat').textContent = `${d.elapsed}s · ${done}/${d.steps.length} 步`;
+  if (d.state === 'running'){
+    DEP.timer = setTimeout(pollJob, 450);
+  }else{
+    setRunning(false);
+    DEP.job = null;
+    $('depStat').textContent = `${d.elapsed}s · 结束`;
+    if (d.state === 'ok') toast(d.dry ? '演练完成，未做任何改动' : '部署完成，服务已就绪');
+    else if (d.state === 'canceled') toast('已中止');
+    else toast(d.error || '部署未完成', true);
+    setTimeout(loadPlan, 1200);
+  }
+}
+
+async function runDeploy(dry){
+  if (DEP.busy) return;
+  if (!dry && DEP.blocked){
+    const bad = (DEP.assess && DEP.assess.items || []).filter(i=>i.level==='block');
+    toast('硬件不满足：' + (bad.map(i=>i.label + ' ' + i.actual).join('；') || '见左侧评估'), true);
+    return;
+  }
+  setRunning(true, dry);
+  try{
+    const r = await fetch('/api/deploy/run', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({dry})
+    });
+    const d = await r.json();
+    if (!r.ok){
+      setRunning(false);
+      toast(d.detail || '无法开始部署', true);
+      if (Array.isArray(d.blocks) && d.blocks.length){
+        DEP.blocked = true; setRunning(false);
+      }
+      return;
+    }
+    attachJob(d.job);
+    if (dry) $('depStat').textContent = '';
+  }catch(e){
+    setRunning(false);
+    toast('启动失败：' + e.message, true);
+  }
+}
+
+$('btnDeploy').onclick = openDeploy;
+$('depClose').onclick = closeDeploy;
+$('depRun').onclick = ()=> runDeploy(false);
+$('depDry').onclick = ()=> runDeploy(true);
+$('depStop').onclick = async ()=>{
+  if (!DEP.job || !confirm('中止当前部署？已经完成的步骤会保留。')) return;
+  try{ await fetch('/api/deploy/cancel/' + DEP.job, {method:'POST'}); }catch(e){}
+  toast('已发送中止请求');
+};
+$('depRecheck').onclick = async ()=>{
+  if (DEP.busy) return;
+  const b = $('depRecheck'); b.disabled = true;
+  $('hwGrid').innerHTML = '<div class="dep-load">重新读取显卡与 torch，约 20 秒…</div>';
+  $('asBox').innerHTML = '<div class="dep-load">检测中…</div>';
+  try{ await fetch('/api/hw?force=1'); }catch(e){}
+  b.disabled = false;
+  await loadPlan();
+};
+
+/* ---------------- 启动 ---------------- */
+pull();
+setInterval(pull, 5000);
+
+// ?view=deploy 直接打开部署页
+(function(){
+  const v = new URLSearchParams(location.search).get('view');
+  if (v === 'deploy') setTimeout(openDeploy, 300);
+})();
+
+// ?tab=general|services|mappings|system|raw 可直接打开设置对应页
+(function(){
+  const t = new URLSearchParams(location.search).get('tab');
+  if (!t) return;
+  setTimeout(async ()=>{
+    await openSettings();
+    if (TABS_TITLE[t]){ CURTAB = t; renderTab(); }
+  }, 600);
+})();
+</script>
+</body>
+</html>
