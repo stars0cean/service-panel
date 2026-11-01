@@ -1,5 +1,10 @@
 # 服务中心 · Service Panel
 
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4)](https://github.com/stars0cean/service-panel)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)](https://github.com/stars0cean/service-panel)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![No Build](https://img.shields.io/badge/frontend-single--file%20HTML-orange)](static/index.html)
+
 > Windows 上的本地服务面板：把「后台服务 + 端口映射 + 域名解析」收在一屏里看和管。
 > 只监听 `127.0.0.1`，外网访问不到，不需要登录。
 
@@ -35,7 +40,7 @@
 需要 Windows 10/11 + Python 3.10+。
 
 ```powershell
-git clone <this-repo> service-panel
+git clone https://github.com/stars0cean/service-panel.git service-panel
 cd service-panel
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
