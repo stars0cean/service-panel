@@ -559,6 +559,7 @@ def build_steps(cfg: dict, hw: dict) -> list[Step]:
     py = venv / "Scripts" / "python.exe"
     key_file = _gw_key_file(dep)
     task = (cfg.get("deploy") or {}).get("task_name") or "BreezeTTSGateway"
+    repo_url = dep.get("repo_url") or ""
     pip_idx = dep.get("pip_index") or "https://pypi.org/simple"
     torch_idx = dep.get("torch_index") or "https://download.pytorch.org/whl/cu128"
     base_py = dep.get("base_python") or "python"
@@ -575,12 +576,13 @@ def build_steps(cfg: dict, hw: dict) -> list[Step]:
 
     def r_dir(emit):
         emit(f"代码目录 {proj} 不完整，请先把仓库放到这个位置", "err")
-        emit("仓库地址：https://github.com/breezeblue-ai/breeze-tts", "dim")
+        if repo_url:
+            emit(f"仓库地址：{repo_url}（也可在 deploy.repo_url 里改）", "dim")
         return False, "代码缺失，无法自动下载"
 
     steps.append(Step("code", "代码目录",
                       "检查推理代码与网关入口是否就位",
-                      c_dir, r_dir, "确认 breeze-tts 仓库已解压到项目目录"))
+                      c_dir, r_dir, "确认推理仓库已解压到项目目录"))
 
     # 2 虚拟环境
     def c_venv():

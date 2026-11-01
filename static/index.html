@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -1022,11 +1022,11 @@ function probeForm(P, pr, scope){
     fields += fRow('加载中文案','', `<input type="text" data-p="${P}|degraded_hint" value="${esc(pr.degraded_hint||'')}" placeholder="模型加载中">`);
   } else if (pt === 'tcp'){
     fields += fRow('主机','可填 @self', `<input type="text" data-p="${P}|host" value="${esc(pr.host||'')}" placeholder="@self">`);
-    fields += fRow('或解析域名','优先于主机', `<div class="inline"><input type="text" data-p="${P}|resolve" value="${esc(pr.resolve||'')}" placeholder="morningtts.chentimeout.top"><button class="mini" data-probe="${P}">测试</button></div>`, '填了域名就先解析成 IPv6 再探端口。目标只监听 IPv6 时必须用这个，用 IPv4 会一直显示「拒绝连接」。');
+    fields += fRow('或解析域名','优先于主机', `<div class="inline"><input type="text" data-p="${P}|resolve" value="${esc(pr.resolve||'')}" placeholder="app.example.com"><button class="mini" data-probe="${P}">测试</button></div>`, '填了域名就先解析成 IPv6 再探端口。目标只监听 IPv6 时必须用这个，用 IPv4 会一直显示「拒绝连接」。');
     fields += fRow('端口','', `<input type="number" data-p="${P}|port" data-type="int" value="${pr.port||''}">`);
     fields += fRow('超时','秒', `<input type="number" data-p="${P}|timeout" data-type="float" value="${pr.timeout||3}" step="0.5">`);
   } else if (pt === 'dns'){
-    fields += fRow('域名','', `<div class="inline"><input type="text" data-p="${P}|domain" value="${esc(pr.domain||'')}" placeholder="morningtts.chentimeout.top"><button class="mini" data-probe="${P}">测试</button></div>`);
+    fields += fRow('域名','', `<div class="inline"><input type="text" data-p="${P}|domain" value="${esc(pr.domain||'')}" placeholder="app.example.com"><button class="mini" data-probe="${P}">测试</button></div>`);
     fields += fRow('记录类型','', `<select data-p="${P}|record_type">${['AAAA','A'].map(t=>`<option value="${t}" ${((pr.record_type||'AAAA')===t)?'selected':''}>${t}</option>`).join('')}</select>`);
   } else if (pt === 'none'){
     fields += `<div class="tip" style="padding:8px 0">只登记，不探测。状态会显示为「未知」。</div>`;
@@ -1124,7 +1124,7 @@ function mapForm(m){
     <label class="sw" style="font-size:12px"><input type="checkbox" id="ddnsOn" ${hasDDNS?'checked':''}><i></i><span>${hasDDNS?'已启用':'不检查'}</span></label>
   </div>
   ${hasDDNS ? `<div class="frm">
-    ${fRow('域名记录','', `<input type="text" data-p="${P}|ddns|record" value="${esc(d.record||'')}" placeholder="morningtts.chentimeout.top">`)}
+    ${fRow('域名记录','', `<input type="text" data-p="${P}|ddns|record" value="${esc(d.record||'')}" placeholder="app.example.com">`)}
     ${fRow('记录类型','', `<select data-p="${P}|ddns|type">${['AAAA','A'].map(t=>`<option ${(d.type||'AAAA')===t?'selected':''}>${t}</option>`).join('')}</select>`)}
     ${fRow('归属设备','展示用', `<input type="text" data-p="${P}|ddns|owner" value="${esc(d.owner||'')}" placeholder="飞牛 NAS">`)}
   </div>` : ''}

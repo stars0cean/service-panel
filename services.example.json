@@ -156,6 +156,7 @@
   ],
   "deploy": {
     "base_dir": "C:\\services\\breeze-tts",
+    "repo_url": "https://github.com/breezeblue-ai/breeze-tts",
     "project_dir": "C:\\services\\breeze-tts\\breeze-tts-main",
     "venv_dir": "C:\\services\\breeze-tts\\venv",
     "model_dir": "C:\\services\\breeze-tts\\model",

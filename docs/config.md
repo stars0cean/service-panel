@@ -94,6 +94,7 @@ DDNS 检查会做一件额外的事：把解析出的地址与本机公网前缀
 | 字段 | 默认 | 说明 |
 |---|---|---|
 | `base_dir` | `../breeze-tts` | 目标项目根目录 |
+| `repo_url` | 空 | 代码缺失时在部署日志里提示的仓库地址 |
 | `project_dir` | `base_dir/breeze-tts-main` | 推理代码所在目录 |
 | `venv_dir` | `base_dir/venv` | 虚拟环境 |
 | `model_dir` | `base_dir/model` | 模型权重 |
